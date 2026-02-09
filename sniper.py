@@ -1,7 +1,7 @@
 """
 EVM Mempool Sniper Bot
 ======================
-A professional liquidity sniping bot for Uniswap V4 and compatible DEXs.
+A professional liquidity sniping bot for Uniswap V5 and Unichain L2.
 
 Features:
 - Async WebSocket mempool monitoring
@@ -9,7 +9,7 @@ Features:
 - Honeypot safety checks
 - Flashbots Protect integration
 - EIP-1559 gas optimization
-- Multi-chain support (ETH, Base, Arbitrum)
+- Multi-chain support (ETH, Base, Arbitrum, Unichain)
 
 Author: Inan
 Version: 1.0.0
@@ -57,7 +57,8 @@ class Config:
     )
     
     # Contract Addresses
-    UNISWAP_V4_POOL_MANAGER: str = "0x000000000004444c5dc75cB358380D2e3dE08A90"
+    # Uniswap V5 Router (Feb 2026)
+    UNISWAP_V5_ROUTER: str = "0x000000000022D473030F116dDEE9F6B43aC78BA3"
     UNISWAP_V2_FACTORY: str = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"
     WETH: str = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
     

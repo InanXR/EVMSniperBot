@@ -8,7 +8,7 @@
 [![Web3.py](https://img.shields.io/badge/web3.py-7.14.0-orange.svg)](https://web3py.readthedocs.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-A high-performance liquidity sniping bot for **Uniswap V4** and compatible DEXs, featuring async mempool monitoring, Flashbots integration, and honeypot detection.
+A high-performance liquidity sniping bot for **Uniswap V5** and **Unichain L2**, featuring async mempool monitoring, Flashbots integration, and honeypot detection.
 
 ![Demo](https://img.shields.io/badge/Status-Portfolio%20Demo-purple)
 
@@ -129,11 +129,12 @@ MAX_BUY_TAX = 10.0          # Max acceptable tax
 
 ## 📚 Key Concepts
 
-### Uniswap V4 (Jan 2025)
+### Uniswap V5 (Feb 2026)
 
-- **Singleton Pattern**: Single `PoolManager` contract manages all pools
-- **Hooks**: Custom logic via `beforeSwap`/`afterSwap`
-- **Address**: `0x000000000004444c5dc75cB358380D2e3dE08A90`
+- **Gas Efficiency**: 40% reduction via off-chain ZK proof verification
+- **Invisible DeFi**: Institutional-grade API abstraction layer
+- **Hooks 2.0**: Enhanced custom logic with native limit order support
+- **Unichain Integration**: Native L2 routing with 200ms Flashblocks
 
 ### MEV & Flashbots
 
