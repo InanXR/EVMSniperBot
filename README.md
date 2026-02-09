@@ -151,7 +151,7 @@ MAX_BUY_TAX = 10.0          # Max acceptable tax
 
 ## 📄 License
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT License - see [LICENSE](License) for details.
 
 <p align="center">
   Built with ❤️ for the Web3 community
