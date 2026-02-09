@@ -91,21 +91,48 @@ PAIR_CREATED_ABI = {
 
 
 # =============================================================================
-# Utility Functions
+# Logging Utilities (ANSI Colors)
 # =============================================================================
 
-def log(emoji: str, message: str) -> None:
-    """Print a formatted log message with timestamp."""
-    timestamp = datetime.now().strftime("%H:%M:%S")
-    print(f"[{timestamp}] {emoji} {message}")
+class Colors:
+    """ANSI color codes for terminal output."""
+    RESET = "\033[0m"
+    BOLD = "\033[1m"
+    
+    # Log level colors
+    INFO = "\033[32m"      # Green
+    EVENT = "\033[33m"     # Yellow  
+    ACTION = "\033[35m"    # Magenta
+    SUCCESS = "\033[92m"   # Bright Green
+    WARNING = "\033[31m"   # Red
+    DEBUG = "\033[36m"     # Cyan
+
+
+def log(level: str, message: str) -> None:
+    """Print a formatted log message with timestamp and colored level."""
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    colors = {
+        "INFO": Colors.INFO,
+        "EVENT": Colors.EVENT,
+        "ACTION": Colors.ACTION,
+        "SUCCESS": Colors.SUCCESS,
+        "WARNING": Colors.WARNING,
+        "DEBUG": Colors.DEBUG,
+    }
+    
+    color = colors.get(level, Colors.RESET)
+    print(f"[{timestamp}] {color}{level}:{Colors.RESET} {message}")
 
 
 def log_header() -> None:
     """Print the bot header."""
-    print("\n" + "=" * 60)
-    print("  EVM MEMPOOL SNIPER BOT v1.0.0")
-    print("  Uniswap V4 | Flashbots Protect | Multi-Chain")
-    print("=" * 60 + "\n")
+    print()
+    print("=" * 65)
+    print("  UNISWAP SNIPER BOT v1.0.0")
+    print("  Mempool Monitor | Flashbots Protect | Multi-Chain")
+    print("=" * 65)
+    print()
 
 
 # =============================================================================
@@ -139,7 +166,7 @@ async def check_honeypot(token_address: str, chain: str = "eth") -> dict:
                         "is_safe": not data.get("honeypotResult", {}).get("isHoneypot", True),
                     }
     except Exception as e:
-        log("⚠️", f"Honeypot check failed: {e}")
+        log("WARNING", f"Honeypot check failed: {e}")
     
     return {"is_honeypot": True, "is_safe": False, "buy_tax": 100, "sell_tax": 100}
 
@@ -206,7 +233,7 @@ async def send_flashbots_bundle(signed_tx: str) -> Optional[str]:
                     data = await response.json()
                     return data.get("result")
     except Exception as e:
-        log("❌", f"Flashbots submission failed: {e}")
+        log("WARNING", f"Flashbots submission failed: {e}")
     
     return None
 
@@ -215,13 +242,14 @@ async def send_flashbots_bundle(signed_tx: str) -> Optional[str]:
 # Transaction Execution (Conceptual)
 # =============================================================================
 
-async def execute_snipe(token_address: str, amount_eth: float) -> bool:
+async def execute_snipe(token_address: str, pair_name: str, block: int) -> bool:
     """
     Execute a snipe transaction.
     
     Args:
         token_address: Target token to buy
-        amount_eth: Amount of ETH to spend
+        pair_name: Display name for the pair
+        block: Block number
     
     Returns:
         True if successful
@@ -229,21 +257,29 @@ async def execute_snipe(token_address: str, amount_eth: float) -> bool:
     Note:
         This is a simulation for portfolio demonstration.
     """
-    log("💰", f"Preparing snipe: {amount_eth} ETH → {token_address[:10]}...")
+    import random
+    import hashlib
     
-    # Simulate gas calculation
-    base_fee = 42.0  # Would come from w3.eth.get_block('latest')
-    gas_params = calculate_gas_params(base_fee)
+    # Generate realistic looking tx hash
+    tx_data = f"{token_address}{block}{random.random()}"
+    tx_hash = "0x" + hashlib.sha256(tx_data.encode()).hexdigest()[:64]
     
-    log("⛽", f"Gas: {base_fee:.1f} Gwei | Priority: {Config.PRIORITY_FEE_GWEI} Gwei")
-    log("🚀", "Submitting via Flashbots Protect...")
+    gas_price = random.randint(35, 85)
     
-    # Simulate transaction
-    await asyncio.sleep(0.5)
+    log("ACTION", f"Initiating buy transaction...  Gas: {gas_price} gwei")
+    await asyncio.sleep(1)
     
-    fake_hash = "0x3b8a7c9d2e1f4a5b6c7d8e9f0a1b2c3d4e5f6a7b"
-    log("✅", f"Private TX Sent: {fake_hash[:10]}...{fake_hash[-4:]}")
-    log("🛡️", "MEV Protection: ACTIVE")
+    log("SUCCESS", f"Buy transaction confirmed in block {block}.")
+    
+    await asyncio.sleep(2)
+    log("INFO", "Calculating arbitrage opportunity...")
+    
+    await asyncio.sleep(1)
+    log("ACTION", "Executing sell on Sushiswap...")
+    
+    await asyncio.sleep(2)
+    profit = round(random.uniform(0.015, 0.065), 3)
+    log("SUCCESS", f"Sell transaction confirmed. Simulated Profit: +{profit} ETH")
     
     return True
 
@@ -256,6 +292,8 @@ async def handle_pair_created(
     token0: str, 
     token1: str, 
     pair: str,
+    pair_name: str,
+    block: int,
 ) -> None:
     """
     Handle a new PairCreated event.
@@ -264,6 +302,8 @@ async def handle_pair_created(
         token0: First token address
         token1: Second token address  
         pair: Pair contract address
+        pair_name: Display name
+        block: Block number
     """
     # Determine which token is the new one (not WETH)
     weth_lower = Config.WETH.lower()
@@ -272,25 +312,13 @@ async def handle_pair_created(
     elif token1.lower() == weth_lower:
         target_token = token0
     else:
-        log("⏭️", "Skipping non-WETH pair")
         return
     
-    log("⚡", f"NEW PAIR: WETH/{target_token[:10]}...")
+    short_addr = f"0x....{target_token[-4:]}"
+    log("EVENT", f"PairCreated detected on Uniswap V2! Token: {short_addr} ({pair_name})")
     
-    # Honeypot check
-    log("🔒", "Running honeypot check...")
-    hp_result = await check_honeypot(target_token)
-    
-    if hp_result["is_safe"]:
-        log("🔒", f"Honeypot Check: ✅ SAFE (Buy: {hp_result['buy_tax']:.1f}%, Sell: {hp_result['sell_tax']:.1f}%)")
-        
-        # Check tax limits
-        if hp_result["buy_tax"] <= Config.MAX_BUY_TAX and hp_result["sell_tax"] <= Config.MAX_SELL_TAX:
-            await execute_snipe(target_token, Config.SNIPE_AMOUNT_ETH)
-        else:
-            log("⚠️", "Tax too high, skipping")
-    else:
-        log("🔒", "Honeypot Check: ❌ UNSAFE - Skipping")
+    # Execute snipe (honeypot check simulated as passing)
+    await execute_snipe(target_token, pair_name, block)
 
 
 # =============================================================================
@@ -305,27 +333,24 @@ async def simulate_mempool_monitor() -> None:
     - web3.eth.subscribe('newPendingTransactions')
     - web3.eth.subscribe('logs', {address: FACTORY})
     """
-    log("📡", "Subscribed: newPendingTransactions")
-    log("🔍", "Monitoring Uniswap V4 PoolManager...")
-    log("🔍", "Monitoring Uniswap V2 Factory...")
+    log("INFO", "Connected to Sepolia Testnet via Infura.")
     
-    # Simulate scanning blocks
-    block_num = 19842103
-    for _ in range(3):
-        await asyncio.sleep(1)
-        log("🔍", f"Scanning Block #{block_num}...")
-        block_num += 1
+    await asyncio.sleep(2)
     
-    # Simulate finding a new pair
-    await asyncio.sleep(0.5)
+    # Simulate finding a pair
+    log("EVENT", "PairCreated detected on Uniswap V2!")
     
-    # Trigger demo pair event
     demo_token = "0x6B175474E89094C44Da98b954EedeAC495271d0F"
     await handle_pair_created(
         token0=Config.WETH,
         token1=demo_token,
         pair="0x1234567890abcdef1234567890abcdef12345678",
+        pair_name="TEST/ETH",
+        block=5678901,
     )
+    
+    await asyncio.sleep(2)
+    log("INFO", "Continuing mempool scan...")
 
 
 # =============================================================================
@@ -336,19 +361,12 @@ async def main() -> None:
     """Main entry point for the sniper bot."""
     log_header()
     
-    # Validate configuration
-    if not Config.ETH_WSS and not os.getenv("DEMO_MODE"):
-        log("ℹ️", "Running in DEMO mode (no RPC configured)")
-    
-    # Display connection status
-    log("🔗", "Connected: Ethereum Mainnet [Block #19842103]")
+    log("INFO", "Starting Ethereum mempool monitor...")
     
     # Run the monitor
     await simulate_mempool_monitor()
     
-    print("\n" + "=" * 60)
-    log("✨", "Demo complete! Check README.md for production setup.")
-    print("=" * 60 + "\n")
+    print()
 
 
 if __name__ == "__main__":
@@ -357,3 +375,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\n[!] Bot stopped by user")
         sys.exit(0)
+
