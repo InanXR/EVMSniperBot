@@ -1,0 +1,18 @@
+# EVM Mempool Sniper Bot - Dependencies
+# =====================================
+# Python 3.10+ required
+
+# Core Web3
+web3>=7.14.0
+
+# Async HTTP client
+aiohttp>=3.9.0
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# WebSocket support
+websockets>=12.0
+
+# Flashbots integration (optional)
+# flashbots>=2.0.0
